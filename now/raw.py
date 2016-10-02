@@ -1,26 +1,22 @@
-#!python3
+"""Raw wrapper for all API calls."""
+
 import json
 import os
 
 import requests
 
+from now import API_ENDPOINT, API_TOKEN
 import now.helpers
-from now.classes import Deployment
 
 
-API_ENDPOINT = "https://api.zeit.co/now"
-API_TOKEN = os.environ.get("ZEIT_API_TOKEN")
-if not API_TOKEN:
-    API_TOKEN = input("Zeit API token: ")
-    os.environ["ZEIT_API_TOKEN"] = API_TOKEN
+class Client:
+    """Direct interface to the now.sh API."""
 
-
-class Now:
-    """Interface to the now.sh API."""
     def __init__(self, token=API_TOKEN):
         self.token = token
 
     def _send_request(self, path, body=None, method="GET"):
+        """Make a request to the API with the appropriate headers."""
         req = requests.request(
             method,
             os.path.join(API_ENDPOINT, path),
@@ -33,22 +29,19 @@ class Now:
         req.raise_for_status()
         return req.json()
 
-    @property
-    def deployments(self):
+    # API wrapper
+
+    def get_deployments(self):
         """List all deployments."""
-        deploys = self._send_request("deployments")["deployments"]
-        return list(map(Deployment, deploys))
+        return self._send_request("deployments")["deployments"]
 
     def get_deployment(self, id):
-        """Get a Deployment object for a deployment with a given id."""
-        # Listing all deployments yields more detailed information, so we
-        # favor filtering the full list over the /deployments/<id> endpoint
-        deploys = self.deployments
-        return list(filter(lambda x: x.id == id, deploys))[0]
+        """Get full deployment info for a deployment with a given id."""
+        return self._send_request("deployments/{}".format(id))
 
     def create_deployment(self, body):
         """Create a new deployment.
-        
+
         body should be a dict mapping paths to file contents. For example:
             {
                 "app/main.py": "print('Hello!')",
@@ -70,14 +63,4 @@ class Now:
                 }
             }
 
-        return Deployment(self._send_request("deployments", body, "POST"))
-
-    def upload_folder(self, path):
-        """Upload a folder to now.sh and return the URL."""
-
-        paths, relpaths = now.helpers.recursive_folder_list(path)
-        files = [now.helpers.get_file_contents(path) for path in paths]
-
-        body = dict(zip(relpaths, files))
-
-        return self.create_deployment(body)
+        return self._send_request("deployments", body, "POST")
