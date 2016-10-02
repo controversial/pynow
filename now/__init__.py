@@ -39,15 +39,22 @@ class Now:
         deploys = self._send_request("deployments")["deployments"]
         return list(map(Deployment, deploys))
 
+    def get_deployment(self, id):
+        """Get a Deployment object for a deployment with a given id."""
+        # Listing all deployments yields more detailed information, so we
+        # favor filtering the full list over the /deployments/<id> endpoint
+        deploys = self.deployments
+        return list(filter(lambda x: x.id == id, deploys))[0]
 
-    def upload_folder(self, path):
-        """Upload a folder to now.sh and return the URL."""
-
-        paths, relpaths = now.helpers.recursive_folder_list(path)
-        files = [now.helpers.get_file_contents(path) for path in paths]
-
-        body = dict(zip(relpaths, files))
-
+    def create_deployment(self, body):
+        """Create a new deployment.
+        
+        body should be a dict mapping paths to file contents. For example:
+            {
+                "app/main.py": "print('Hello!')",
+                "app2/main.py": "print('Hi')"
+            }
+        """
         if "package.json" in body:
             body["package"] = body.pop("package.json")
 
@@ -63,4 +70,14 @@ class Now:
                 }
             }
 
-        return self._send_request("instant", body, "POST")
+        return Deployment(self._send_request("deployments", body, "POST"))
+
+    def upload_folder(self, path):
+        """Upload a folder to now.sh and return the URL."""
+
+        paths, relpaths = now.helpers.recursive_folder_list(path)
+        files = [now.helpers.get_file_contents(path) for path in paths]
+
+        body = dict(zip(relpaths, files))
+
+        return self.create_deployment(body)
