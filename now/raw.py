@@ -6,7 +6,6 @@ import os
 import requests
 
 from now import API_ENDPOINT, API_TOKEN
-import now.helpers
 
 
 class Client:

@@ -10,7 +10,7 @@ def get_file_contents(path):
 
 def recursive_folder_list(path):
     """Recursively list files inside a folder.
-    
+
     Given a folder, return a list of paths to all its files and a list of
     these paths relative to the given folder.
     """
