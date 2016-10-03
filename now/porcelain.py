@@ -10,10 +10,12 @@ from now.raw import Client
 
 class Deployment:
     """A single deployment to now.sh."""
-    def __init__(self, data, parent=None):
+    def __init__(self, data, client=None, parent=None):
         # Handle passing id instead of dict
         if isinstance(data, str):
             data = parent[id]._data
+        
+        self._client = client or Client()
 
         self._data = data
         self.name = data["name"]
@@ -23,7 +25,7 @@ class Deployment:
 
     def delete(self):
         """Remove the deployment"""
-        pass
+        self._client.delete_deployment(self.id)
 
     remove = delete  # Alias
 

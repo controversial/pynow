@@ -63,3 +63,6 @@ class Client:
             }
 
         return self._send_request("deployments", body, "POST")
+    
+    def delete_deployment(self, id):
+        return self._send_request("deployments/" + id, None, "DELETE")
