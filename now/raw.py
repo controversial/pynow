@@ -16,16 +16,22 @@ class Client:
 
     def _send_request(self, path, body=None, method="GET", raw=False):
         """Make a request to the API with the appropriate headers."""
-        req = requests.request(
-            method,
-            os.path.join(API_ENDPOINT, path),
-            json=body,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + API_TOKEN
-            },
-        )
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + API_TOKEN
+        }
+        url = os.path.join(API_ENDPOINT, path)
+
+        # Construct the request
+        if isinstance(body, dict):
+            req = requests.request(method, url, json=body, headers=headers)
+        else:
+            req = requests.request(method, url, data=body, headers=headers)
+
+        # Raise any error recieved
         req.raise_for_status()
+        
+        # Return result
         if raw:
             return req.content
         else:
