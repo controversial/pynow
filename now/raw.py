@@ -14,7 +14,7 @@ class Client:
     def __init__(self, token=API_TOKEN):
         self.token = token
 
-    def _send_request(self, path, body=None, method="GET"):
+    def _send_request(self, path, body=None, method="GET", raw=False):
         """Make a request to the API with the appropriate headers."""
         req = requests.request(
             method,
@@ -26,7 +26,10 @@ class Client:
             },
         )
         req.raise_for_status()
-        return req.json()
+        if raw:
+            return req.content
+        else:
+            return req.json()
 
     # API wrapper
 
@@ -38,7 +41,7 @@ class Client:
         """Get full deployment info for a deployment with a given id."""
         return self._send_request("deployments/{}".format(id))
 
-    def create_deployment(self, body):
+    def create_deployment(self, body, name=None):
         """Create a new deployment.
 
         body should be a dict mapping paths to file contents. For example:
@@ -53,7 +56,7 @@ class Client:
         # Allow static deployments by inserting a dummy package.json
         if "Dockerfile" not in body and "package" not in body:
             body["package"] = {
-                "name": "pythonista-deployment",
+                "name": name or "pythonista-deployment",
                 "dependencies": {
                     "list": "latest"
                 },
@@ -63,6 +66,15 @@ class Client:
             }
 
         return self._send_request("deployments", body, "POST")
-    
+
     def delete_deployment(self, id):
-        return self._send_request("deployments/" + id, None, "DELETE")
+        return self._send_request("deployments/{}".format(id), method="DELETE")
+
+    def get_files(self, id):
+        return self._send_request("deployments/{}/files".format(id))
+
+    def get_file(self, id, fileid):
+        return self._send_request(
+            "deployments/{}/files/{}".format(id, fileid),
+            raw=True
+        )
