@@ -29,9 +29,6 @@ class Deployment:
 
     remove = delete  # Alias
 
-    def __del__(self):
-        self.delete()
-
     def __repr__(self):
         return "<Deployment '{}'>".format(self.name)
 
