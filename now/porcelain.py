@@ -109,6 +109,10 @@ class Deployment:
 
     remove = delete  # Alias
 
+    @property
+    def aliases(self):
+        return self._client.get_deployment_aliases(self.id)["aliases"]
+
     def __repr__(self):
         return "<Deployment '{}'>".format(self.name)
 

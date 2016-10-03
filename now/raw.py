@@ -84,3 +84,11 @@ class Client:
             "deployments/{}/files/{}".format(id, fileid),
             raw=True
         )
+
+    def get_global_aliases(self):
+        return self._send_request("aliases")
+
+    def get_deployment_aliases(self, deployment_id):
+        return self._send_request(
+            "deployments/{}/aliases".format(deployment_id)
+        )
