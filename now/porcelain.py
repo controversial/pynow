@@ -27,7 +27,16 @@ class File():
         self.uid = self.id = data["uid"]
         self.type = data["type"]
 
-        self.content = self._client.get_file(self.deployment.id, self.id)
+    # A cached property is appropriate here because content requires a network
+    # request and would therefore slow down initialization if placed in
+    # __init__. However, since deployments are immutable, content will never
+    # change and can be safely cached after first retrieval.
+    @now.helpers.cachedproperty
+    def content(self):
+        return self._client.get_file(self.deployment.id, self.id)
+
+    def __repr__(self):
+        return "<File {}>".format(self.name)
 
 
 class Files(collections.Mapping):
@@ -67,7 +76,10 @@ class Files(collections.Mapping):
         return iter(map(lambda x: x["uid"], self._data))
 
     def __len__(self):
-        return len(self._data())
+        return len(self._data)
+
+    def __repr__(self):
+        return repr(dict(self))
 
 
 class Deployment:
@@ -84,8 +96,12 @@ class Deployment:
         self.id = self.uid = data["uid"]
         self.url = self.host = data["url"]
         self.created = datetime.fromtimestamp(int(data["created"]) / 1000)
-        
-        self.files = Files(self)
+
+    # Deployments are immutable, so the deployment will always have the same
+    # files.
+    @now.helpers.cachedproperty
+    def files(self):
+        return Files(self)
 
     def delete(self):
         """Remove the deployment"""
